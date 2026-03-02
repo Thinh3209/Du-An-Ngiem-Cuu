@@ -210,6 +210,12 @@
     </div>
 
     <script>
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function analyzeHacker(sessionId, ipAddress) {
             const modal = document.getElementById('aiModal');
             const loader = document.getElementById('aiLoader');
@@ -250,17 +256,17 @@
                                 <div class="text-neon-red font-bold tracking-widest uppercase mb-1">=== COGNITIVE THREAT ASSESSMENT ===</div>
                                 <div class="text-[10px] text-neon-blue/50 tracking-widest">TIMESTAMP: ${new Date().toISOString()}</div>
                             </div>
-                            <div class="text-white/90 drop-shadow-[0_0_2px_rgba(255,255,255,0.2)]">${text}</div>
+                            <div class="text-white/90 drop-shadow-[0_0_2px_rgba(255,255,255,0.2)]">${escapeHtml(text)}</div>
                         `;
                     } else if(data.error) {
-                        content.innerHTML = `<div class="bg-neon-red/20 border border-neon-red text-neon-red p-4 font-bold tracking-widest uppercase">SYSTEM_FAULT: ${data.error}</div>`;
+                        content.innerHTML = `<div class="bg-neon-red/20 border border-neon-red text-neon-red p-4 font-bold tracking-widest uppercase">SYSTEM_FAULT: ${escapeHtml(data.error)}</div>`;
                     }
                 })
                 .catch(err => {
                     clearInterval(phaseInterval);
                     loader.classList.add('hidden');
                     content.classList.remove('hidden');
-                    content.innerHTML = `<div class="bg-neon-red/20 border border-neon-red text-neon-red p-4 font-bold tracking-widest uppercase">UPLINK_SEVERED: ${err}</div>`;
+                    content.innerHTML = `<div class="bg-neon-red/20 border border-neon-red text-neon-red p-4 font-bold tracking-widest uppercase">UPLINK_SEVERED: ${escapeHtml(String(err))}</div>`;
                 });
         }
 

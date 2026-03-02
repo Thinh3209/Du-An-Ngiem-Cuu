@@ -152,6 +152,12 @@
     </div>
 
     <script>
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         async function sendQuestion() {
             const input = document.getElementById('user-input');
             const chatBox = document.getElementById('chat-box');
@@ -163,7 +169,7 @@
                 <div class="flex flex-col gap-1 text-right">
                     <span class="text-[9px] font-bold opacity-40 uppercase tracking-widest">Operator_Command:</span>
                     <div class="p-3 bg-white/5 border border-white/10 text-white inline-block self-end shadow-sm">
-                        ${userText}
+                        ${escapeHtml(userText)}
                     </div>
                 </div>
             `;
@@ -184,7 +190,7 @@
                     <div class="flex flex-col gap-1.5">
                         <span class="text-[9px] font-bold text-neon-blue tracking-widest uppercase">Neural_Response:</span>
                         <div class="p-3 bg-neon-blue/5 border-l-2 border-neon-blue/50 text-white/90">
-                            ${data.answer}
+                            ${escapeHtml(data.answer)}
                         </div>
                     </div>
                 `;
