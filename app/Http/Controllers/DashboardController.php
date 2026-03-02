@@ -177,7 +177,7 @@ public function layer1()
             $answer = "LỖI KẾT NỐI: " . $e->getMessage();
         }
 
-        return response()->json(['answer' => e($answer)]);
+        return response()->json(['answer' => $answer]);
     }
 
     /**

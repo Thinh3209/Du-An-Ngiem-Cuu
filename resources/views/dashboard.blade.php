@@ -508,7 +508,7 @@
                                 const csrfToken = '{{ csrf_token() }}';
                                 data.logs.forEach(log => {
                                     let action = (log.status === 'Auto-Blocked' || log.status === 'Manual-Blocked') ? 
-                                        `<span class="border border-cyber-red px-2 py-1 text-cyber-red text-[10px] uppercase">${log.status == 'Auto-Blocked' ? 'SYS_BLOCK' : 'ADM_BLOCK'}</span>` : 
+                                        `<span class="border border-cyber-red px-2 py-1 text-cyber-red text-[10px] uppercase">${log.status === 'Auto-Blocked' ? 'SYS_BLOCK' : 'ADM_BLOCK'}</span>` : 
                                         `<form action="{{ url('/block-ip') }}/${log.id}" method="POST" class="inline"><input type="hidden" name="_token" value="${csrfToken}"><button type="submit" class="border border-cyber-blue px-2 py-1 text-cyber-blue text-[10px] uppercase cursor-pointer">EXEC_BLOCK</button></form>`;
                                     
                                     let riskColor = log.risk_score >= 90 ? 'text-cyber-red' : (log.risk_score >= 50 ? 'text-orange-400' : 'text-cyber-green');
