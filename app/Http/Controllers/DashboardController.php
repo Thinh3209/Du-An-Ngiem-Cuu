@@ -51,7 +51,7 @@ class DashboardController extends Controller
         $logs = IntrusionLog::orderBy('created_at', 'desc')->take(10)->get();
         $logText = $logs->map(fn($l) => "- IP: {$l->ip_address} | Loại: {$l->attack_type}")->implode("\n");
 
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.api_key');
         if (empty($apiKey)) {
             $aiReport = "LỖI: Chưa cấu hình GEMINI_API_KEY!";
             return view('layer2', compact('logs', 'aiReport'));
@@ -109,7 +109,7 @@ public function layer1()
         $commandList = implode("\n- ", $session->commands);
         $prompt = "Bạn là chuyên gia Threat Intelligence. Phân tích hành vi hacker qua lệnh sau:\n- " . $commandList;
 
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.api_key');
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
 
         try {
@@ -139,6 +139,78 @@ public function layer1()
         $badFiles = WebShellLog::orderBy('created_at', 'desc')->get();
         $quarantinedCount = $badFiles->count();
         return view('webshell', compact('badFiles', 'quarantinedCount'));
+    }
+
+    /**
+     * AI Chat: Gửi câu hỏi từ người dùng đến Gemini AI và nhận phản hồi
+     */
+    public function chatWithAI(Request $request)
+    {
+        $question = $request->input('question');
+
+        if (empty($question)) {
+            return response()->json(['answer' => 'Vui lòng nhập câu hỏi.']);
+        }
+
+        $apiKey = config('services.gemini.api_key');
+        if (empty($apiKey)) {
+            return response()->json(['answer' => 'LỖI: Chưa cấu hình GEMINI_API_KEY!']);
+        }
+
+        $logs = IntrusionLog::orderBy('created_at', 'desc')->take(10)->get();
+        $logText = $logs->map(fn($l) => "- IP: {$l->ip_address} | Loại: {$l->attack_type} | Risk: {$l->risk_score}")->implode("\n");
+
+        $prompt = "Bạn là chuyên gia bảo mật SHIELD-AI. Dựa trên dữ liệu log:\n{$logText}\n\nTrả lời câu hỏi: {$question}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
+
+        try {
+            $response = Http::withoutVerifying()->post($url, [
+                'contents' => [['parts' => [['text' => $prompt]]]]
+            ]);
+
+            if ($response->successful()) {
+                $answer = $response->json('candidates.0.content.parts.0.text') ?? "AI không thể phân tích.";
+            } else {
+                $answer = "LỖI API: Không thể kết nối đến Gemini AI.";
+            }
+        } catch (\Exception $e) {
+            $answer = "LỖI KẾT NỐI: " . $e->getMessage();
+        }
+
+        return response()->json(['answer' => $answer]);
+    }
+
+    /**
+     * Auto Radar: Tự động sinh dữ liệu tấn công mô phỏng cho Dashboard
+     */
+    public function autoGenerateAttack()
+    {
+        $attackTypes = ['Scan', 'BruteForce', 'Exploit', 'Malware'];
+        $lat = fake()->latitude(-60, 70);
+        $lng = fake()->longitude(-170, 170);
+
+        $log = IntrusionLog::create([
+            'ip_address' => fake()->ipv4(),
+            'attack_type' => $attackTypes[array_rand($attackTypes)],
+            'action_type' => 'Auto Radar Simulated',
+            'risk_score' => rand(10, 100),
+            'latitude' => $lat,
+            'longitude' => $lng,
+        ]);
+
+        $logs = IntrusionLog::orderBy('created_at', 'desc')->take(10)->get();
+        $highRiskCount = IntrusionLog::where('risk_score', '>', 90)->count();
+
+        return response()->json([
+            'status' => 'success',
+            'highRiskCount' => $highRiskCount,
+            'new_hacker' => [
+                'lat' => $lat,
+                'lng' => $lng,
+                'risk' => $log->risk_score,
+            ],
+            'logs' => $logs,
+        ]);
     }
 
     /**

@@ -163,7 +163,7 @@
                     <form action="{{ route('toggle.auto') }}" method="POST" class="m-0">
                         @csrf
                         <button type="submit" class="focus:outline-none flex items-center">
-                            @if(env('AUTO_BLOCK_ENABLED', true))
+                            @if(config('services.shield.auto_block_enabled', true))
                                 <span class="bg-cyber-green/10 text-cyber-green border border-cyber-green px-3 py-1 text-xs font-bold tracking-widest shadow-[0_0_10px_rgba(16,185,129,0.2)] hover:bg-cyber-green/20 transition-all cursor-pointer">AUTO_ON</span>
                             @else
                                 <span class="bg-cyber-red/10 text-cyber-red border border-cyber-red px-3 py-1 text-xs font-bold tracking-widest hover:bg-cyber-red/20 transition-all cursor-pointer">MANUAL</span>
@@ -320,9 +320,12 @@
             @elseif($log->status === 'Manual-Blocked')
                 <span class="text-[10px] font-bold text-orange-400 tracking-widest bg-orange-500/10 border border-orange-500/30 px-2 py-1">ADM_BLOCK</span>
             @else
-                <a href="{{ url('/block-ip/' . $log->id) }}" class="text-[10px] text-cyber-blue tracking-widest border border-cyber-blue hover:bg-cyber-blue hover:text-white px-3 py-1 transition-all uppercase inline-block text-center">
-                    Exec_Block
-                </a>
+                <form action="{{ route('block.ip', $log->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="text-[10px] text-cyber-blue tracking-widest border border-cyber-blue hover:bg-cyber-blue hover:text-white px-3 py-1 transition-all uppercase inline-block text-center cursor-pointer">
+                        Exec_Block
+                    </button>
+                </form>
             @endif
         </td>
         <td class="py-3 px-6 text-right text-xs text-cyber-muted">{{ $log->created_at->diffForHumans() }}</td>
@@ -443,6 +446,12 @@
     </div>
 
 <script>
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     const RADAR_INTERVAL = 15; // 15 giây
     // ĐÃ XÓA DÒNG const serverPos = ... Ở ĐÂY VÌ ĐÃ KHAI BÁO Ở TRÊN RỒI
 
@@ -496,17 +505,18 @@
                             const tbody = document.getElementById('live-traffic-body');
                             if (tbody && data.logs) {
                                 let html = '';
+                                const csrfToken = '{{ csrf_token() }}';
                                 data.logs.forEach(log => {
-                                    let action = log.status ? 
-                                        `<span class="border border-cyber-red px-2 py-1 text-cyber-red text-[10px] uppercase">${log.status == 'Auto-Blocked' ? 'SYS_BLOCK' : 'ADM_BLOCK'}</span>` : 
-                                        `<a href="{{ url('/block-ip') }}/${log.id}" class="border border-cyber-blue px-2 py-1 text-cyber-blue text-[10px] uppercase">EXEC_BLOCK</a>`;
+                                    let action = (log.status === 'Auto-Blocked' || log.status === 'Manual-Blocked') ? 
+                                        `<span class="border border-cyber-red px-2 py-1 text-cyber-red text-[10px] uppercase">${log.status === 'Auto-Blocked' ? 'SYS_BLOCK' : 'ADM_BLOCK'}</span>` : 
+                                        `<form action="{{ url('/block-ip') }}/${log.id}" method="POST" class="inline"><input type="hidden" name="_token" value="${csrfToken}"><button type="submit" class="border border-cyber-blue px-2 py-1 text-cyber-blue text-[10px] uppercase cursor-pointer">EXEC_BLOCK</button></form>`;
                                     
                                     let riskColor = log.risk_score >= 90 ? 'text-cyber-red' : (log.risk_score >= 50 ? 'text-orange-400' : 'text-cyber-green');
 
                                     html += `<tr class="border-b border-cyber-border/40 hover:bg-cyber-blue/5">
-                                        <td class="py-3 px-6 text-white font-mono-tech">>> ${log.ip_address}</td>
-                                        <td class="py-3 px-6 text-cyber-muted">${log.attack_type}</td>
-                                        <td class="py-3 px-6 ${riskColor} font-bold">[${log.risk_score}%]</td>
+                                        <td class="py-3 px-6 text-white font-mono-tech">>> ${escapeHtml(String(log.ip_address))}</td>
+                                        <td class="py-3 px-6 text-cyber-muted">${escapeHtml(String(log.attack_type))}</td>
+                                        <td class="py-3 px-6 ${riskColor} font-bold">[${escapeHtml(String(log.risk_score))}%]</td>
                                         <td class="py-3 px-6">${action}</td>
                                         <td class="py-3 px-6 text-right text-cyber-muted">just now</td>
                                     </tr>`;

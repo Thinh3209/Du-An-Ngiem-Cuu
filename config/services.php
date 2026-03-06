@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+    ],
+
+    'shield' => [
+        'auto_block_enabled' => env('AUTO_BLOCK_ENABLED', true),
+    ],
+
 ];
