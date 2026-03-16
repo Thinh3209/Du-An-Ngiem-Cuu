@@ -8,45 +8,50 @@ use App\Models\IntrusionLog;
 
 class WebShellShield
 {
+    /**
+     * Intercept and analyze file uploads for malicious WebShell payloads.
+     */
     public function handle(Request $request, Closure $next)
     {
-        // 1. Danh sách các đuôi file cấm và lệnh nguy hiểm
-        $dangerousExtensions = ['php', 'phtml', 'sh', 'exe', 'bat', 'cmd'];
-        $dangerousSignatures = ['<?php', 'eval(', 'system(', 'shell_exec(', 'base64_decode('];
+        // Defined threat vectors
+        $forbiddenExtensions = ['php', 'phtml', 'sh', 'exe', 'bat', 'cmd'];
+        $maliciousSignatures = ['<?php', 'eval(', 'system(', 'shell_exec(', 'base64_decode('];
 
-        // 2. Quét toàn bộ file được tải lên
         foreach ($request->allFiles() as $file) {
             $extension = strtolower($file->getClientOriginalExtension());
             $content = file_get_contents($file->getRealPath());
+            $threatDetected = false;
 
-            $isDangerous = false;
-
-            // Kiểm tra đuôi file
-            if (in_array($extension, $dangerousExtensions)) {
-                $isDangerous = true;
+            // 1. Validate File Extension
+            if (in_array($extension, $forbiddenExtensions)) {
+                $threatDetected = true;
             }
 
-            // Kiểm tra nội dung (Chữ ký mã độc)
-            foreach ($dangerousSignatures as $sig) {
-                if (strpos($content, $sig) !== false) {
-                    $isDangerous = true;
-                    break;
+            // 2. Deep Packet Inspection (Signature Matching)
+            if (!$threatDetected) {
+                foreach ($maliciousSignatures as $sig) {
+                    if (str_contains($content, $sig)) {
+                        $threatDetected = true;
+                        break;
+                    }
                 }
             }
 
-            // 3. Xử lý tiêu diệt và Báo động
-            if ($isDangerous) {
-                // Đẩy dữ liệu vào Lớp 2 (Dashboard) và tự động kích hoạt Lớp 5 (Telegram)
+            // Execute Countermeasures if threat is verified
+            if ($threatDetected) {
+                
+                // Record incident in the global audit trail
                 IntrusionLog::create([
                     'ip_address' => $request->ip(),
                     'attack_type' => 'Exploit',
-                    'action_type' => 'Upload Web Shell',
-                    'risk_score' => 95 // Điểm cực cao để tự động khóa
+                    'action_type' => 'Malicious WebShell Upload Attempt',
+                    'risk_score' => 95,
+                    'status' => 'Terminated'
                 ]);
 
-                // Đuổi cổ kẻ tấn công
+                // Return high-severity JSON response
                 return response()->json([
-                    'error' => 'SHIELD-AI ALERT: Phat hien ma doc! IP cua ban da bi ghi nhan va khoa.'
+                    'error' => 'SHIELD-AI SECURITY ALERT: Malicious payload detected. This incident has been logged and your access has been revoked.'
                 ], 403);
             }
         }

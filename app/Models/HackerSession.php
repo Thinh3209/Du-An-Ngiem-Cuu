@@ -18,7 +18,7 @@ class HackerSession extends Model
         'ai_prediction'
     ];
 
-    // Ép kiểu (Cast) trường commands từ dạng Text trong DB thành mảng (Array) trong PHP để dễ xử lý
+   
     protected $casts = [
         'commands' => 'array',
     ];

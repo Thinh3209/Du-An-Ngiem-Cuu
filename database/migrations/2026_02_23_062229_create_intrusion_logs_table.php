@@ -6,9 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+  
 public function up()
 {
     Schema::create('intrusion_logs', function (Blueprint $table) {
@@ -18,7 +16,7 @@ public function up()
         $table->string('password_attempt')->nullable();
         $table->string('action_type')->nullable();
         
-        // 2 CỘT MỚI ĐỂ LÀM AI ANALYSIS VÀ DASHBOARD
+       
         $table->string('attack_type')->nullable(); 
         $table->integer('risk_score')->default(0); 
         $table->string('status')->default('Pending');
@@ -27,9 +25,7 @@ public function up()
     });
 }
 
-    /**
-     * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('intrusion_logs');

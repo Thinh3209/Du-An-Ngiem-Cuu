@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        
+        // 🛡️ KÍCH HOẠT LÍNH GÁC SHIELD-AI TRÊN TOÀN BỘ HỆ THỐNG
+        $middleware->append(\App\Http\Middleware\ShieldFirewall::class);
+        
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

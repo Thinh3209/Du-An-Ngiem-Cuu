@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('intrusion_logs', function (Blueprint $table) {
-            // Thêm 2 cột để lưu tọa độ hacker sinh ra từ code của bạn
+            
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
         });
